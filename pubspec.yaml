@@ -1,0 +1,31 @@
+name: sudoku_app
+description: A Sudoku app with puzzle generation, PDF export, and solution lookup.
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  shared_preferences: ^2.2.2
+  pdf: ^3.10.8
+  printing: ^5.12.0
+  share_plus: ^7.2.1
+  path_provider: ^2.1.2
+  uuid: ^4.3.3
+  flutter_staggered_animations: ^1.1.1
+  google_fonts: ^6.1.0
+
+dev_dependencies:
+  flutter_launcher_icons: ^0.13.1
+
+flutter_launcher_icons:
+  android: true
+  ios: false
+  image_path: "assets/icon.png"
+  min_sdk_android: 21
+
+flutter:
+  uses-material-design: true
