@@ -36,7 +36,7 @@ A personal Flutter Android app that generates unlimited Sudoku puzzles — becau
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/your-username/sudoku-for-mom.git
+git clone https://github.com/your-username/sudoku-app.git
 cd sudoku-app
 
 # 2. Install dependencies
