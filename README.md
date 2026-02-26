@@ -5,6 +5,9 @@ A personal Flutter Android app that generates unlimited Sudoku puzzles — becau
 ![Flutter](https://img.shields.io/badge/Flutter-3.0%2B-02569B?logo=flutter&logoColor=white)
 ![Platform](https://img.shields.io/badge/Platform-Android-3DDC84?logo=android&logoColor=white)
 ![License](https://img.shields.io/badge/License-MIT-yellow.svg)
+![Release](https://img.shields.io/github/v/release/your-username/sudoku-app?color=blue)
+
+📲 **[Download latest APK →](https://github.com/your-username/sudoku-app/releases/latest)**
 
 ---
 
