@@ -156,7 +156,7 @@ class _PrintOptionsScreenState extends State<PrintOptionsScreen> {
                     const Text('Adds solution pages at the end of the PDF'),
                 value: _includeSolutions,
                 onChanged: (v) => setState(() => _includeSolutions = v),
-                activeColor: const Color(0xFF1565C0),
+                activeThumbColor: const Color(0xFF1565C0),
                 contentPadding: EdgeInsets.zero,
               ),
 
