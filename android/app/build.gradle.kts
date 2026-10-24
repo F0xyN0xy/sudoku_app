@@ -20,26 +20,36 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "com.example.sudoku_app"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }
 
+    signingConfigs {
+        create("release") {
+            storeFile = file(System.getenv("ANDROID_KEYSTORE_PATH") ?: "upload-keystore.jks")
+            storePassword = System.getenv("ANDROID_KEYSTORE_PASSWORD") ?: ""
+            keyAlias = System.getenv("ANDROID_KEY_ALIAS") ?: ""
+            keyPassword = System.getenv("ANDROID_KEY_PASSWORD") ?: ""
+        }
+    }
+
     buildTypes {
-        // Keep the debug build separate from the Play/Release APK so developers can
-        // install and test it without replacing the release app or its local data.
+        // Keep the debug build separate so developers can test without replacing
+        // the release app or its locally saved data.
         debug {
             applicationIdSuffix = ".debug"
         }
         release {
-            // TODO: Add your own release signing config before distributing updates.
-            // Signing with the debug key is only a temporary development setup.
-            signingConfig = signingConfigs.getByName("debug")
+            // Local builds retain the existing debug-key fallback. The release
+            // workflow supplies a persistent upload key through GitHub Secrets.
+            signingConfig = if (System.getenv("ANDROID_KEYSTORE_PATH") != null) {
+                signingConfigs.getByName("release")
+            } else {
+                signingConfigs.getByName("debug")
+            }
         }
     }
 }
