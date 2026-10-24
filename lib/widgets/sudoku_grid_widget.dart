@@ -3,19 +3,23 @@ import 'package:flutter/material.dart';
 class SudokuGridWidget extends StatefulWidget {
   final List<List<int>> puzzle;
   final List<List<int>> solution;
+  final List<List<int>>? initialGrid;
   final int gridSize;
   final bool readOnly;
   final bool showResults; // only true after user taps "Check"
   final VoidCallback? onChanged;
+  final ValueChanged<List<List<int>>>? onProgressChanged;
 
   const SudokuGridWidget({
     super.key,
     required this.puzzle,
     required this.solution,
     required this.gridSize,
+    this.initialGrid,
     this.readOnly = false,
     this.showResults = false,
     this.onChanged,
+    this.onProgressChanged,
   });
 
   @override
@@ -30,14 +34,27 @@ class SudokuGridWidgetState extends State<SudokuGridWidget> {
   @override
   void initState() {
     super.initState();
-    _userGrid = widget.puzzle.map((row) => List<int>.from(row)).toList();
+    _userGrid = _copyGrid(widget.initialGrid ?? widget.puzzle);
+    assert(() {
+      debugPrint(
+        'SUDOKU GRID INIT: '
+        'initial row 3=${widget.initialGrid != null ? widget.initialGrid![2] : null}; '
+        'puzzle row 3=${widget.puzzle[2]}; '
+        'rendered row 3=${_userGrid[2]}',
+      );
+      return true;
+    }());
   }
+
+  List<List<int>> _copyGrid(List<List<int>> grid) =>
+      grid.map((row) => List<int>.from(row)).toList();
 
   @override
   void didUpdateWidget(SudokuGridWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.puzzle != widget.puzzle) {
-      _userGrid = widget.puzzle.map((row) => List<int>.from(row)).toList();
+    if (oldWidget.puzzle != widget.puzzle ||
+        oldWidget.initialGrid != widget.initialGrid) {
+      _userGrid = _copyGrid(widget.initialGrid ?? widget.puzzle);
       _selectedRow = null;
       _selectedCol = null;
     }
@@ -46,30 +63,64 @@ class SudokuGridWidgetState extends State<SudokuGridWidget> {
   int get _boxSize => widget.gridSize == 4 ? 2 : 3;
   bool _isGiven(int row, int col) => widget.puzzle[row][col] != 0;
 
-  /// True when every empty cell has been filled in
+  /// True when every empty cell has been filled in.
   bool get isFull {
     for (int r = 0; r < widget.gridSize; r++) {
       for (int c = 0; c < widget.gridSize; c++) {
-        if (!_isGiven(r, c) && _userGrid[r][c] == 0) return false;
+        if (_userGrid[r][c] == 0) return false;
       }
     }
     return true;
   }
 
-  /// How many user-filled cells are correct
+  /// True if the completed board obeys all Sudoku constraints and preserves
+  /// the original clues. This deliberately does not compare against only the
+  /// generator's stored solution, so another valid solution is accepted.
+  bool get isSolved {
+    if (!isFull) return false;
+    final size = widget.gridSize;
+    for (int r = 0; r < size; r++) {
+      for (int c = 0; c < size; c++) {
+        final value = _userGrid[r][c];
+        if (value < 1 || value > size) return false;
+        if (_isGiven(r, c) && value != widget.puzzle[r][c]) return false;
+        for (int i = 0; i < size; i++) {
+          if (i != c && _userGrid[r][i] == value) return false;
+          if (i != r && _userGrid[i][c] == value) return false;
+        }
+        final box = _boxSize;
+        final startRow = (r ~/ box) * box;
+        final startCol = (c ~/ box) * box;
+        for (int br = startRow; br < startRow + box; br++) {
+          for (int bc = startCol; bc < startCol + box; bc++) {
+            if ((br != r || bc != c) && _userGrid[br][bc] == value) {
+              return false;
+            }
+          }
+        }
+      }
+    }
+    return true;
+  }
+
+  /// How many user-filled cells are correct. A fully valid solution is
+  /// accepted even if it differs from the originally stored solution.
   int get correctCount {
+    if (isSolved) return totalUserFilled;
     int count = 0;
     for (int r = 0; r < widget.gridSize; r++) {
       for (int c = 0; c < widget.gridSize; c++) {
-        if (!_isGiven(r, c) && _userGrid[r][c] != 0) {
-          if (_userGrid[r][c] == widget.solution[r][c]) count++;
+        if (!_isGiven(r, c) &&
+            _userGrid[r][c] != 0 &&
+            _userGrid[r][c] == widget.solution[r][c]) {
+          count++;
         }
       }
     }
     return count;
   }
 
-  /// Total number of user-filled cells (excludes givens)
+  /// Total number of user-filled cells (excludes givens).
   int get totalUserFilled {
     int count = 0;
     for (int r = 0; r < widget.gridSize; r++) {
@@ -94,6 +145,7 @@ class SudokuGridWidgetState extends State<SudokuGridWidget> {
     setState(() {
       _userGrid[_selectedRow!][_selectedCol!] = number;
     });
+    widget.onProgressChanged?.call(_copyGrid(_userGrid));
     widget.onChanged?.call();
   }
 
@@ -113,7 +165,6 @@ class SudokuGridWidgetState extends State<SudokuGridWidget> {
   Widget _buildGrid() {
     return LayoutBuilder(builder: (context, constraints) {
       final gridWidth = constraints.maxWidth.clamp(0.0, 380.0);
-
       return Container(
         width: gridWidth,
         height: gridWidth,
@@ -149,9 +200,16 @@ class SudokuGridWidgetState extends State<SudokuGridWidget> {
     final userValue = _userGrid[row][col];
     final correctValue = widget.solution[row][col];
 
-    // Only colour cells when results are revealed
-    final isWrong = widget.showResults && !given && userValue != 0 && userValue != correctValue;
-    final isCorrect = widget.showResults && !given && userValue != 0 && userValue == correctValue;
+    // If the whole board is a valid solution, don't flag values that differ
+    // from the stored solution. For incomplete/invalid boards retain the
+    // per-cell hint based on the stored solution.
+    final isWrong = widget.showResults &&
+        !isSolved &&
+        !given &&
+        userValue != 0 &&
+        userValue != correctValue;
+    final isCorrect = widget.showResults &&
+        (isSolved || (!given && userValue != 0 && userValue == correctValue));
 
     Color bgColor = Colors.white;
     if (isWrong) {
@@ -207,7 +265,6 @@ class SudokuGridWidgetState extends State<SudokuGridWidget> {
                                   : Colors.black87,
                     ),
                   ),
-                  // Show correct number underneath wrong ones
                   if (isWrong)
                     Text(
                       '$correctValue',

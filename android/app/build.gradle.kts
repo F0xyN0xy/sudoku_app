@@ -31,9 +31,14 @@ android {
     }
 
     buildTypes {
+        // Keep the debug build separate from the Play/Release APK so developers can
+        // install and test it without replacing the release app or its local data.
+        debug {
+            applicationIdSuffix = ".debug"
+        }
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
+            // TODO: Add your own release signing config before distributing updates.
+            // Signing with the debug key is only a temporary development setup.
             signingConfig = signingConfigs.getByName("debug")
         }
     }

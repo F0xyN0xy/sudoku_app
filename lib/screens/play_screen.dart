@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/sudoku_puzzle.dart';
+import '../services/puzzle_storage.dart';
 import '../widgets/sudoku_grid_widget.dart';
 import 'print_options_screen.dart';
 
@@ -13,21 +14,42 @@ class PlayScreen extends StatefulWidget {
 }
 
 class _PlayScreenState extends State<PlayScreen> {
-  // Key so we can ask the grid widget whether it's complete
   final _gridKey = GlobalKey<SudokuGridWidgetState>();
+  final _storage = PuzzleStorage();
+  Future<void> _saveQueue = Future<void>.value();
   bool _showResults = false;
+
+  @override
+  void initState() {
+    super.initState();
+    debugPrint(
+      'OPENING PUZZLE ${widget.puzzle.shortId}: '
+      'currentGrid=${widget.puzzle.currentGrid}',
+    );
+  }
 
   Future<void> _printPuzzle() async {
     Navigator.push(
       context,
       MaterialPageRoute(
-          builder: (_) => PrintOptionsScreen(puzzles: [widget.puzzle])),
+        builder: (_) => PrintOptionsScreen(puzzles: [widget.puzzle]),
+      ),
     );
   }
 
   void _onGridChanged() {
-    // Trigger a rebuild so the bottom bar can update
     setState(() {});
+  }
+
+  void _saveProgress(List<List<int>> grid) {
+    // Serialize writes so quick consecutive taps cannot overwrite newer
+    // progress with an older snapshot.
+    final updatedPuzzle = widget.puzzle.copyWith(currentGrid: grid);
+    _saveQueue = _saveQueue
+        .then((_) => _storage.save(updatedPuzzle))
+        .catchError((Object error) {
+      debugPrint('Failed to save Sudoku progress: $error');
+    });
   }
 
   void _revealResults() {
@@ -39,6 +61,7 @@ class _PlayScreenState extends State<PlayScreen> {
   }
 
   bool get _isFull => _gridKey.currentState?.isFull ?? false;
+  bool get _isSolved => _gridKey.currentState?.isSolved ?? false;
 
   @override
   Widget build(BuildContext context) {
@@ -73,29 +96,31 @@ class _PlayScreenState extends State<PlayScreen> {
           padding: const EdgeInsets.all(16),
           child: Column(
             children: [
-              // Status banner
               AnimatedSwitcher(
                 duration: const Duration(milliseconds: 250),
                 child: _showResults
                     ? _ResultsBanner(
                         key: const ValueKey('results'),
                         correctCount: _gridKey.currentState?.correctCount ?? 0,
-                        totalUserFilled: _gridKey.currentState?.totalUserFilled ?? 0,
+                        totalUserFilled:
+                            _gridKey.currentState?.totalUserFilled ?? 0,
+                        isSolved: _isSolved,
                         onHide: _hideResults,
                       )
                     : const SizedBox.shrink(key: ValueKey('empty')),
               ),
               if (_showResults) const SizedBox(height: 12),
-
               Expanded(
                 child: Center(
                   child: SudokuGridWidget(
                     key: _gridKey,
                     puzzle: p.puzzle,
                     solution: p.solution,
+                    initialGrid: p.currentGrid,
                     gridSize: p.gridSize,
                     showResults: _showResults,
                     onChanged: _onGridChanged,
+                    onProgressChanged: _saveProgress,
                   ),
                 ),
               ),
@@ -128,9 +153,7 @@ class _PlayScreenState extends State<PlayScreen> {
                 ? Icons.visibility_off_outlined
                 : Icons.checklist_outlined,
             label: _showResults ? 'Hide' : 'Check',
-            color: _isFull
-                ? Colors.green.shade700
-                : Colors.grey.shade400,
+            color: _isFull ? Colors.green.shade700 : Colors.grey.shade400,
             onTap: _isFull
                 ? (_showResults ? _hideResults : _revealResults)
                 : () {
@@ -152,22 +175,23 @@ class _PlayScreenState extends State<PlayScreen> {
       s.isEmpty ? s : s[0].toUpperCase() + s.substring(1);
 }
 
-// Banner shown after checking
 class _ResultsBanner extends StatelessWidget {
   final int correctCount;
   final int totalUserFilled;
+  final bool isSolved;
   final VoidCallback onHide;
 
   const _ResultsBanner({
     super.key,
     required this.correctCount,
     required this.totalUserFilled,
+    required this.isSolved,
     required this.onHide,
   });
 
   @override
   Widget build(BuildContext context) {
-    final allCorrect = correctCount == totalUserFilled;
+    final allCorrect = isSolved;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
@@ -189,8 +213,8 @@ class _ResultsBanner extends StatelessWidget {
           Expanded(
             child: Text(
               allCorrect
-                  ? 'Perfect! Every cell is correct 🎉'
-                  : '$correctCount / $totalUserFilled correct — wrong cells are highlighted in red',
+                  ? 'Solved correctly! Every row, column and box is valid 🎉'
+                  : '$correctCount / $totalUserFilled match the saved solution — check the highlighted cells',
               style: TextStyle(
                 color: allCorrect
                     ? Colors.green.shade800
@@ -198,6 +222,11 @@ class _ResultsBanner extends StatelessWidget {
                 fontSize: 13,
               ),
             ),
+          ),
+          IconButton(
+            onPressed: onHide,
+            icon: const Icon(Icons.close, size: 18),
+            tooltip: 'Hide results',
           ),
         ],
       ),
@@ -211,11 +240,12 @@ class _BottomAction extends StatelessWidget {
   final VoidCallback onTap;
   final Color? color;
 
-  const _BottomAction(
-      {required this.icon,
-      required this.label,
-      required this.onTap,
-      this.color});
+  const _BottomAction({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+    this.color,
+  });
 
   @override
   Widget build(BuildContext context) {

@@ -49,3 +49,5 @@ app.*.map.json
 /windows
 /web
 /test
+# Widget Preview related
+.widget_preview/
