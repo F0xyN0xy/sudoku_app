@@ -1,7 +1,7 @@
 import 'dart:isolate';
 import 'dart:math';
 
-// ── Top-level so Isolate.run can reach it ────────────────────────────────────
+// Isolate entry point.
 Map<String, dynamic> _generateInIsolate(Map<String, dynamic> args) {
   final size = args['size'] as int;
   final difficulty = args['difficulty'] as String;
@@ -13,7 +13,6 @@ Map<String, dynamic> _generateInIsolate(Map<String, dynamic> args) {
   return {'puzzle': puzzle, 'solution': solution};
 }
 
-// ── Fast internal generator (no class state shared across isolates) ──────────
 class _Generator {
   final Random rng;
   _Generator(this.rng);
@@ -25,13 +24,11 @@ class _Generator {
   }
 
   bool _fill(List<List<int>> grid, int size) {
-    // Use bitmask sets for O(1) validity instead of .contains()
     final int box = sqrt(size).toInt();
     final rows = List.filled(size, 0);
     final cols = List.filled(size, 0);
     final boxes = List.filled(size, 0);
 
-    // Pre-populate masks from already-filled cells
     for (int r = 0; r < size; r++) {
       for (int c = 0; c < size; c++) {
         final v = grid[r][c];
@@ -59,15 +56,12 @@ class _Generator {
     if (pos == size * size) return true;
     final r = pos ~/ size;
     final c = pos % size;
-
     if (grid[r][c] != 0) {
       return _backtrack(grid, size, box, rows, cols, boxes, pos + 1);
     }
 
     final bIdx = (r ~/ box) * box + (c ~/ box);
     final used = rows[r] | cols[c] | boxes[bIdx];
-
-    // Collect valid candidates and shuffle
     final candidates = <int>[];
     for (int n = 1; n <= size; n++) {
       if (used & (1 << n) == 0) candidates.add(n);
@@ -80,9 +74,9 @@ class _Generator {
       rows[r] |= bit;
       cols[c] |= bit;
       boxes[bIdx] |= bit;
-
-      if (_backtrack(grid, size, box, rows, cols, boxes, pos + 1)) return true;
-
+      if (_backtrack(grid, size, box, rows, cols, boxes, pos + 1)) {
+        return true;
+      }
       grid[r][c] = 0;
       rows[r] ^= bit;
       cols[c] ^= bit;
@@ -94,7 +88,6 @@ class _Generator {
   List<List<int>> createPuzzle(
       List<List<int>> solution, String difficulty, int size) {
     final puzzle = solution.map((r) => List<int>.from(r)).toList();
-
     final cellsToRemove = switch ((size, difficulty)) {
       (4, 'easy') => 6,
       (4, 'medium') => 8,
@@ -105,25 +98,87 @@ class _Generator {
       _ => 36,
     };
 
+    // Remove a clue only if the resulting puzzle still has exactly one
+    // solution. This prevents new puzzles from having ambiguous answers.
     final positions = List.generate(size * size, (i) => i)..shuffle(rng);
     int removed = 0;
     for (final pos in positions) {
       if (removed >= cellsToRemove) break;
-      puzzle[pos ~/ size][pos % size] = 0;
-      removed++;
+      final row = pos ~/ size;
+      final col = pos % size;
+      final oldValue = puzzle[row][col];
+      puzzle[row][col] = 0;
+      if (_countSolutions(puzzle, size, limit: 2) == 1) {
+        removed++;
+      } else {
+        puzzle[row][col] = oldValue;
+      }
     }
     return puzzle;
   }
+
+  int _countSolutions(List<List<int>> grid, int size, {int limit = 2}) {
+    final box = sqrt(size).toInt();
+    int bestRow = -1;
+    int bestCol = -1;
+    List<int>? bestCandidates;
+
+    // Minimum-remaining-values heuristic keeps uniqueness checks practical.
+    for (int r = 0; r < size; r++) {
+      for (int c = 0; c < size; c++) {
+        if (grid[r][c] != 0) continue;
+        final candidates = <int>[];
+        for (int n = 1; n <= size; n++) {
+          if (_canPlace(grid, r, c, n, size, box)) candidates.add(n);
+        }
+        if (candidates.isEmpty) return 0;
+        if (bestCandidates == null ||
+            candidates.length < bestCandidates.length) {
+          bestRow = r;
+          bestCol = c;
+          bestCandidates = candidates;
+          if (candidates.length == 1) break;
+        }
+      }
+      if (bestCandidates?.length == 1) break;
+    }
+
+    if (bestCandidates == null) return 1;
+
+    int solutions = 0;
+    for (final value in bestCandidates) {
+      grid[bestRow][bestCol] = value;
+      solutions += _countSolutions(grid, size, limit: limit - solutions);
+      grid[bestRow][bestCol] = 0;
+      if (solutions >= limit) return solutions;
+    }
+    return solutions;
+  }
+
+  bool _canPlace(
+      List<List<int>> grid, int row, int col, int value, int size, int box) {
+    for (int i = 0; i < size; i++) {
+      if (grid[row][i] == value || grid[i][col] == value) return false;
+    }
+    final startRow = (row ~/ box) * box;
+    final startCol = (col ~/ box) * box;
+    for (int r = startRow; r < startRow + box; r++) {
+      for (int c = startCol; c < startCol + box; c++) {
+        if (grid[r][c] == value) return false;
+      }
+    }
+    return true;
+  }
 }
 
-// ── Public API ───────────────────────────────────────────────────────────────
 class SudokuGenerator {
   /// Runs generation in a background isolate so the UI stays smooth.
   Future<({List<List<int>> puzzle, List<List<int>> solution})> generate(
       int size, String difficulty) async {
     final seed = Random().nextInt(1 << 30);
     final result = await Isolate.run(
-      () => _generateInIsolate({'size': size, 'difficulty': difficulty, 'seed': seed}),
+      () => _generateInIsolate(
+          {'size': size, 'difficulty': difficulty, 'seed': seed}),
     );
     return (
       puzzle: (result['puzzle'] as List)
