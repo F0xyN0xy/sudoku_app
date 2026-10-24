@@ -35,6 +35,15 @@ class SudokuGridWidgetState extends State<SudokuGridWidget> {
   void initState() {
     super.initState();
     _userGrid = _copyGrid(widget.initialGrid ?? widget.puzzle);
+    assert(() {
+      debugPrint(
+        'SUDOKU GRID INIT: '
+        'initial row 3=${widget.initialGrid != null ? widget.initialGrid![2] : null}; '
+        'puzzle row 3=${widget.puzzle[2]}; '
+        'rendered row 3=${_userGrid[2]}',
+      );
+      return true;
+    }());
   }
 
   List<List<int>> _copyGrid(List<List<int>> grid) =>
