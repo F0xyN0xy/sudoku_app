@@ -119,7 +119,6 @@ class _SolutionLookupScreenState extends State<SolutionLookupScreen> {
                 ),
               ),
               const SizedBox(height: 24),
-
               if (_notFound)
                 Container(
                   padding: const EdgeInsets.all(16),
@@ -140,7 +139,6 @@ class _SolutionLookupScreenState extends State<SolutionLookupScreen> {
                     ],
                   ),
                 ),
-
               if (_found != null) ...[
                 _PuzzleInfoCard(puzzle: _found!),
                 const SizedBox(height: 20),
@@ -202,8 +200,8 @@ class _PuzzleInfoCard extends StatelessWidget {
                   children: [
                     Text(
                       '${puzzle.gridSize}×${puzzle.gridSize}  •  ',
-                      style: TextStyle(
-                          color: Colors.green.shade700, fontSize: 12),
+                      style:
+                          TextStyle(color: Colors.green.shade700, fontSize: 12),
                     ),
                     Container(
                       padding: const EdgeInsets.symmetric(
@@ -223,8 +221,8 @@ class _PuzzleInfoCard extends StatelessWidget {
                     ),
                     Text(
                       '  •  ${puzzle.createdAt.day}/${puzzle.createdAt.month}/${puzzle.createdAt.year}',
-                      style: TextStyle(
-                          color: Colors.green.shade700, fontSize: 12),
+                      style:
+                          TextStyle(color: Colors.green.shade700, fontSize: 12),
                     ),
                   ],
                 ),

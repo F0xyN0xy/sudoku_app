@@ -19,7 +19,8 @@ class PuzzleStorage {
     // Avoid duplicates
     all.removeWhere((p) => p.id == puzzle.id);
     all.add(puzzle);
-    await prefs.setString(_key, jsonEncode(all.map((p) => p.toJson()).toList()));
+    await prefs.setString(
+        _key, jsonEncode(all.map((p) => p.toJson()).toList()));
   }
 
   Future<SudokuPuzzle?> findById(String id) async {
@@ -40,6 +41,7 @@ class PuzzleStorage {
     final prefs = await SharedPreferences.getInstance();
     final all = await loadAll();
     all.removeWhere((p) => p.id == id);
-    await prefs.setString(_key, jsonEncode(all.map((p) => p.toJson()).toList()));
+    await prefs.setString(
+        _key, jsonEncode(all.map((p) => p.toJson()).toList()));
   }
 }
