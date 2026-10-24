@@ -19,6 +19,15 @@ class _PlayScreenState extends State<PlayScreen> {
   Future<void> _saveQueue = Future<void>.value();
   bool _showResults = false;
 
+  @override
+  void initState() {
+    super.initState();
+    debugPrint(
+      'OPENING PUZZLE ${widget.puzzle.shortId}: '
+      'currentGrid=${widget.puzzle.currentGrid}',
+    );
+  }
+
   Future<void> _printPuzzle() async {
     Navigator.push(
       context,
