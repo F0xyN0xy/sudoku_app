@@ -126,8 +126,7 @@ class _PrintOptionsScreenState extends State<PrintOptionsScreen> {
                           decoration: BoxDecoration(
                             color: const Color(0xFFE3F2FD),
                             borderRadius: BorderRadius.circular(10),
-                            border:
-                                Border.all(color: const Color(0xFF90CAF9)),
+                            border: Border.all(color: const Color(0xFF90CAF9)),
                           ),
                           child: Row(
                             children: [

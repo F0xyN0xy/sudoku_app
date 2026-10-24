@@ -254,8 +254,7 @@ class SudokuGridWidgetState extends State<SudokuGridWidget> {
                     '$userValue',
                     style: TextStyle(
                       fontSize: widget.gridSize == 4 ? 20 : 17,
-                      fontWeight:
-                          given ? FontWeight.bold : FontWeight.normal,
+                      fontWeight: given ? FontWeight.bold : FontWeight.normal,
                       color: given
                           ? Colors.black87
                           : isWrong

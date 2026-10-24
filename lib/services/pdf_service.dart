@@ -14,14 +14,15 @@ class PdfService {
 
     // Split puzzles into pages
     for (int i = 0; i < puzzles.length; i += puzzlesPerPage) {
-      final pagePuzzles = puzzles.sublist(
-          i, (i + puzzlesPerPage).clamp(0, puzzles.length));
+      final pagePuzzles =
+          puzzles.sublist(i, (i + puzzlesPerPage).clamp(0, puzzles.length));
 
       pdf.addPage(
         pw.Page(
           pageFormat: PdfPageFormat.a4,
           margin: const pw.EdgeInsets.all(24),
-          build: (context) => _buildPage(pagePuzzles, puzzlesPerPage, includeSolutions: false),
+          build: (context) =>
+              _buildPage(pagePuzzles, puzzlesPerPage, includeSolutions: false),
         ),
       );
     }
@@ -29,14 +30,15 @@ class PdfService {
     // Solution pages if requested
     if (includeSolutions) {
       for (int i = 0; i < puzzles.length; i += puzzlesPerPage) {
-        final pagePuzzles = puzzles.sublist(
-            i, (i + puzzlesPerPage).clamp(0, puzzles.length));
+        final pagePuzzles =
+            puzzles.sublist(i, (i + puzzlesPerPage).clamp(0, puzzles.length));
 
         pdf.addPage(
           pw.Page(
             pageFormat: PdfPageFormat.a4,
             margin: const pw.EdgeInsets.all(24),
-            build: (context) => _buildPage(pagePuzzles, puzzlesPerPage, includeSolutions: true),
+            build: (context) =>
+                _buildPage(pagePuzzles, puzzlesPerPage, includeSolutions: true),
           ),
         );
       }
@@ -49,7 +51,8 @@ class PdfService {
       {required bool includeSolutions}) {
     if (puzzles.length == 1) {
       return pw.Center(
-        child: _buildPuzzleBlock(puzzles[0], includeSolutions: includeSolutions),
+        child:
+            _buildPuzzleBlock(puzzles[0], includeSolutions: includeSolutions),
       );
     }
 
@@ -58,7 +61,8 @@ class PdfService {
       children: puzzles
           .map((p) => pw.Expanded(
                 child: pw.Center(
-                  child: _buildPuzzleBlock(p, includeSolutions: includeSolutions, compact: true),
+                  child: _buildPuzzleBlock(p,
+                      includeSolutions: includeSolutions, compact: true),
                 ),
               ))
           .toList(),
@@ -67,7 +71,8 @@ class PdfService {
 
   pw.Widget _buildPuzzleBlock(SudokuPuzzle puzzle,
       {bool includeSolutions = false, bool compact = false}) {
-    final title = includeSolutions ? 'SOLUTION' : puzzle.difficulty.toUpperCase();
+    final title =
+        includeSolutions ? 'SOLUTION' : puzzle.difficulty.toUpperCase();
     final grid = includeSolutions ? puzzle.solution : puzzle.puzzle;
     final cellSize = puzzle.gridSize == 4
         ? (compact ? 40.0 : 60.0)
@@ -86,7 +91,8 @@ class PdfService {
         pw.SizedBox(height: 4),
         pw.Text(
           'ID: ${puzzle.shortId}  •  ${puzzle.gridSize}×${puzzle.gridSize}  •  ${puzzle.createdAt.day}/${puzzle.createdAt.month}/${puzzle.createdAt.year}',
-          style: pw.TextStyle(fontSize: compact ? 8 : 10, color: PdfColors.grey700),
+          style: pw.TextStyle(
+              fontSize: compact ? 8 : 10, color: PdfColors.grey700),
         ),
         pw.SizedBox(height: 8),
         _buildGrid(grid, puzzle.gridSize, cellSize, puzzle.puzzle),
@@ -134,9 +140,7 @@ class PdfService {
                     bottom: isBoxBorderBottom
                         ? const pw.BorderSide(width: 2)
                         : const pw.BorderSide(width: 0.5),
-                    left: col == 0
-                        ? pw.BorderSide.none
-                        : pw.BorderSide.none,
+                    left: col == 0 ? pw.BorderSide.none : pw.BorderSide.none,
                     top: row == 0 ? pw.BorderSide.none : pw.BorderSide.none,
                   ),
                 ),

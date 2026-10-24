@@ -73,9 +73,8 @@ class HistoryScreenState extends State<HistoryScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(_selected.isEmpty
-            ? 'My Puzzles'
-            : '${_selected.length} selected'),
+        title: Text(
+            _selected.isEmpty ? 'My Puzzles' : '${_selected.length} selected'),
         backgroundColor: const Color(0xFF1565C0),
         foregroundColor: Colors.white,
         actions: [
@@ -160,8 +159,7 @@ class HistoryScreenState extends State<HistoryScreen> {
             } else {
               Navigator.push(
                 context,
-                MaterialPageRoute(
-                    builder: (_) => PlayScreen(puzzle: puzzle)),
+                MaterialPageRoute(builder: (_) => PlayScreen(puzzle: puzzle)),
               ).then((_) => _load());
             }
           },
@@ -231,7 +229,8 @@ class HistoryScreenState extends State<HistoryScreen> {
                                       fontWeight: FontWeight.w600),
                                 ),
                                 const SizedBox(width: 3),
-                                const Icon(Icons.copy, size: 12, color: Color(0xFF1565C0)),
+                                const Icon(Icons.copy,
+                                    size: 12, color: Color(0xFF1565C0)),
                               ],
                             ),
                           ),
@@ -250,8 +249,7 @@ class HistoryScreenState extends State<HistoryScreen> {
                   const Icon(Icons.check_circle, color: Color(0xFF1565C0))
                 else
                   PopupMenuButton<String>(
-                    icon:
-                        Icon(Icons.more_vert, color: Colors.grey.shade500),
+                    icon: Icon(Icons.more_vert, color: Colors.grey.shade500),
                     onSelected: (val) {
                       if (val == 'copy') {
                         _copyId(puzzle);
@@ -287,8 +285,7 @@ class HistoryScreenState extends State<HistoryScreen> {
                             Icon(Icons.delete_outline,
                                 size: 18, color: Colors.red),
                             SizedBox(width: 8),
-                            Text('Delete',
-                                style: TextStyle(color: Colors.red)),
+                            Text('Delete', style: TextStyle(color: Colors.red)),
                           ])),
                     ],
                   ),
