@@ -216,9 +216,8 @@ class _ResultsBanner extends StatelessWidget {
                   ? 'Solved correctly! Every row, column and box is valid 🎉'
                   : '$correctCount / $totalUserFilled match the saved solution — check the highlighted cells',
               style: TextStyle(
-                color: allCorrect
-                    ? Colors.green.shade800
-                    : Colors.orange.shade800,
+                color:
+                    allCorrect ? Colors.green.shade800 : Colors.orange.shade800,
                 fontSize: 13,
               ),
             ),

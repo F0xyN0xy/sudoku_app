@@ -4,6 +4,7 @@ class SudokuPuzzle {
   final String difficulty; // easy, medium, hard
   final List<List<int>> puzzle; // 0 = empty
   final List<List<int>> solution;
+
   /// The player's current board. Null means the puzzle has not been started.
   final List<List<int>>? currentGrid;
   final DateTime createdAt;
@@ -56,5 +57,7 @@ class SudokuPuzzle {
         createdAt: DateTime.parse(json['createdAt'] as String),
       );
 
+  String get shortId =>
+      id.substring(0, id.length < 8 ? id.length : 8).toUpperCase();
   String get shortId => id.substring(0, id.length < 8 ? id.length : 8).toUpperCase();
 }
