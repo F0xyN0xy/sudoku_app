@@ -39,6 +39,8 @@ android {
     buildTypes {
         // Keep the debug build separate so developers can test without replacing
         // the release app or its locally saved data.
+        // Keep the debug build separate from the Play/Release APK so developers can
+        // install and test it without replacing the release app or its local data.
         debug {
             applicationIdSuffix = ".debug"
         }
@@ -50,6 +52,9 @@ android {
             } else {
                 signingConfigs.getByName("debug")
             }
+            // TODO: Add your own release signing config before distributing updates.
+            // Signing with the debug key is only a temporary development setup.
+            signingConfig = signingConfigs.getByName("debug")
         }
     }
 }

@@ -59,4 +59,5 @@ class SudokuPuzzle {
 
   String get shortId =>
       id.substring(0, id.length < 8 ? id.length : 8).toUpperCase();
+  String get shortId => id.substring(0, id.length < 8 ? id.length : 8).toUpperCase();
 }
